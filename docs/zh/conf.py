@@ -14,148 +14,94 @@ html_search_language = "zh"
 # Point to the root _static directory
 html_static_path = ["../_static"]
 
-# Add custom JS for language switcher and interactive features
+# Add custom JS for language switcher
 html_js_files = [
     "js/switcher.js",
-    "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js",
-    "js/interactive-playground.js",
-    "js/model-comparison.js",
+    "js/jupyterlite-core.js",
+    "js/interactive-docs.js",
+    "js/real-time-viz.js",
+    "js/collaborative-annotations.js",
 ]
 
-# Add custom CSS for interactive components
+# Add custom CSS for interactive documentation
 html_css_files = [
     "css/interactive-docs.css",
+    "css/jupyterlite-custom.css",
 ]
 
-# Enable MyST-NB for Jupyter notebook execution in documentation
-extensions.append("myst_nb")
+# Extensions for interactive documentation
+extensions = [
+    *globals().get("extensions", []),
+    "jupyterlite_sphinx",
+    "sphinx_copybutton",
+    "sphinx_tabs",
+    "sphinx_design",
+    "sphinxcontrib.mermaid",
+]
 
-# Configure MyST-NB for interactive execution
-nb_execution_mode = "cache"
-nb_execution_timeout = 300
-nb_execution_raise_on_error = False
+# JupyterLite configuration
+jupyterlite_config = "jupyterlite_config.json"
+jupyterlite_contents = ["../notebooks"]
+jupyterlite_dir = "_static/jupyterlite"
 
-# Configure interactive widgets
-interactive_widgets = {
-    "enable": True,
+# Enable real-time visualization
+realtime_viz_enabled = True
+realtime_viz_port = 8050
+
+# Collaborative annotations configuration
+annotations_enabled = True
+annotations_api_endpoint = "https://annotations.forge.org/api"
+
+# Interactive playground settings
+playground_enabled = True
+playground_models = [
+    "llama-2-7b",
+    "llama-2-13b",
+    "chatglm3-6b",
+    "qwen-7b",
+]
+
+# Custom configuration for interactive elements
+interactive_config = {
+    "enable_code_execution": True,
+    "enable_gpu_monitoring": True,
+    "enable_live_metrics": True,
+    "enable_collaborative_editing": True,
     "default_kernel": "python3",
-    "allowed_languages": ["python"],
+    "execution_timeout": 30,
     "max_output_lines": 1000,
-    "timeout": 30,
 }
 
-# Pyodide configuration for browser-based Python execution
-pyodide_config = {
-    "indexURL": "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/",
-    "packages": [
-        "numpy",
-        "pandas",
-        "torch",
-        "transformers",
-        "datasets",
-        "accelerate",
-        "peft",
-        "trl",
-        "scikit-learn",
-        "matplotlib",
-        "seaborn",
-        "tqdm",
-    ],
+# HTML theme options for interactive documentation
+html_theme_options = {
+    *globals().get("html_theme_options", {}),
+    "navigation_with_keys": True,
+    "show_toc_level": 2,
+    "announcement": "🚀 Interactive documentation with live examples now available!",
 }
 
-# Model comparison tool configuration
-model_comparison_config = {
-    "enable": True,
-    "default_models": [
-        "llama2-7b",
-        "llama2-13b",
-        "mistral-7b",
-        "falcon-7b",
-    ],
-    "metrics": ["perplexity", "accuracy", "latency", "memory"],
-    "max_comparison_models": 4,
+# Custom sidebar for interactive features
+html_sidebars = {
+    "**": [
+        "sidebar/scroll-start.html",
+        "sidebar/brand.html",
+        "sidebar/search.html",
+        "sidebar/navigation.html",
+        "sidebar/interactive-playground.html",
+        "sidebar/real-time-metrics.html",
+        "sidebar/collaborative-annotations.html",
+        "sidebar/scroll-end.html",
+    ]
 }
 
-# Interactive playground configuration
-playground_config = {
-    "enable": True,
-    "default_framework": "forge",
-    "presets": {
-        "quick_start": {
-            "model_name": "llama2-7b-hf",
-            "dataset": "alpaca_gpt4_en",
-            "template": "llama2",
-            "finetuning_type": "lora",
-            "lora_rank": 8,
-            "learning_rate": 2e-4,
-            "num_epochs": 3,
-            "batch_size": 4,
-        },
-        "qlora_optimized": {
-            "model_name": "llama2-7b-hf",
-            "dataset": "alpaca_gpt4_en",
-            "template": "llama2",
-            "finetuning_type": "qlora",
-            "quantization_bit": 4,
-            "lora_rank": 16,
-            "learning_rate": 1e-4,
-            "num_epochs": 5,
-            "batch_size": 2,
-        },
-        "full_finetune": {
-            "model_name": "llama2-7b-hf",
-            "dataset": "alpaca_gpt4_en",
-            "template": "llama2",
-            "finetuning_type": "full",
-            "learning_rate": 5e-5,
-            "num_epochs": 3,
-            "batch_size": 8,
-        },
-    },
-    "available_models": [
-        "llama2-7b-hf",
-        "llama2-13b-hf",
-        "mistral-7b-v0.1",
-        "falcon-7b",
-        "qwen-7b",
-        "baichuan2-7b",
-    ],
-    "available_datasets": [
-        "alpaca_gpt4_en",
-        "alpaca_gpt4_zh",
-        "self_cognition",
-        "sharegpt",
-        "openassistant",
-    ],
-}
+# Template paths for custom templates
+templates_path = ["_templates", "../_templates"]
 
-# Custom HTML context for interactive components
+# Additional context for templates
 html_context = {
-    **html_context,
-    "pyodide_config": pyodide_config,
-    "interactive_widgets": interactive_widgets,
-    "model_comparison_config": model_comparison_config,
-    "playground_config": playground_config,
+    *globals().get("html_context", {}),
+    "interactive_mode": True,
+    "jupyterlite_url": "./jupyterlite/lab/index.html",
+    "playground_url": "./playground/",
+    "viz_dashboard_url": "./dashboard/",
 }
-
-# Enable live code execution in documentation
-suppress_warnings = ["mystnb.unknown_mime_type"]
-
-# Configure notebook output
-nb_output_stderr = "remove"
-nb_merge_streams = True
-
-# Add custom directives for interactive components
-rst_prolog = """
-.. |try_it| raw:: html
-
-   <div class="try-it-button" onclick="openPlayground(this)">Try It Live</div>
-
-.. |compare_models| raw:: html
-
-   <div class="compare-models-button" onclick="openModelComparison()">Compare Models</div>
-
-.. |interactive_widget| raw:: html
-
-   <div class="interactive-widget"></div>
-"""
