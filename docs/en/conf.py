@@ -1,6 +1,5 @@
 import os
 import sys
-import json
 
 # Add parent dir to path to allow importing conf.py
 sys.path.insert(0, os.path.abspath(".."))
@@ -15,136 +14,125 @@ html_search_language = "en"
 # Point to the root _static directory
 html_static_path = ["../_static"]
 
-# Add custom JS for language switcher and interactive features
+# Add custom JS for language switcher
 html_js_files = [
     "js/switcher.js",
-    "https://cdn.jsdelivr.net/npm/jupyterlite@0.1.0/dist/piplite.js",
-    "js/playground.js",
-    "js/interactive-widgets.js",
+    "js/interactive.js",
+    "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js",
+    "https://cdn.plot.ly/plotly-2.24.1.min.js",
+    "js/jupyterlite-core.js",
 ]
 
-# Add custom CSS for interactive components
+# Add custom CSS for interactive documentation
 html_css_files = [
-    "https://cdn.jsdelivr.net/npm/jupyterlite@0.1.0/dist/piplite.css",
-    "css/playground.css",
-    "css/interactive-widgets.css",
+    "css/interactive.css",
+    "css/jupyterlite.css",
 ]
 
-# Interactive Documentation Configuration
-interactive_config = {
-    "enable_playground": True,
-    "enable_model_comparison": True,
-    "enable_hyperparameter_tuning": True,
-    "default_models": ["llama2", "mistral", "falcon"],
-    "default_datasets": ["alpaca", "dolly", "self-instruct"],
-    "default_hyperparameters": {
-        "learning_rate": 2e-5,
-        "num_epochs": 3,
-        "batch_size": 4,
-        "gradient_accumulation_steps": 4,
-        "warmup_steps": 100,
-        "lora_r": 8,
-        "lora_alpha": 16,
-        "lora_dropout": 0.05
-    }
+# Extensions for interactive documentation
+extensions = [
+    *globals().get("extensions", []),
+    "sphinxcontrib.video",
+    "sphinxcontrib.mermaid",
+    "jupyterlite_sphinx",
+]
+
+# JupyterLite configuration
+jupyterlite_config = {
+    "LiteBuildConfig": {
+        "contents": ["../notebooks"],
+        "output_dir": "_static/jupyterlite",
+    },
+    "SphinxAddonConfig": {
+        "default_kernel": "python",
+        "theme": "lab",
+    },
 }
 
-# Setup function for Sphinx
-def setup(app):
-    """Setup Sphinx app with interactive documentation features."""
-    # Add custom configuration values
-    app.add_config_value('interactive_config', interactive_config, 'html')
-    
-    # Connect to builder-inited event to inject configuration
-    app.connect('builder-inited', inject_interactive_config)
-    
-    # Add custom directives for interactive components
-    app.add_directive('try-it', TryItDirective)
-    app.add_directive('model-compare', ModelCompareDirective)
-    app.add_directive('hyperparameter-tuner', HyperparameterTunerDirective)
+# Interactive features configuration
+interactive_features = {
+    "enable_live_examples": True,
+    "enable_gpu_monitoring": True,
+    "enable_collaborative_annotations": True,
+    "enable_model_playground": True,
+    "gpu_monitoring_endpoint": "/api/gpu-stats",
+    "annotation_api_endpoint": "/api/annotations",
+    "playground_model_endpoint": "/api/model-inference",
+}
 
-def inject_interactive_config(app):
-    """Inject interactive configuration into the HTML context."""
-    if app.builder.name == 'html':
-        # Add interactive config to template context
-        app.builder.globalcontext['interactive_config'] = json.dumps(interactive_config)
-        
-        # Create playground directory if it doesn't exist
-        playground_dir = os.path.join(app.outdir, '_static', 'playground')
-        os.makedirs(playground_dir, exist_ok=True)
+# Template configuration for interactive elements
+templates_path = ["_templates", "../_templates"]
 
-# Custom directive for "Try It" sections
-from docutils.parsers.rst import Directive
-from docutils import nodes
+# HTML theme options for interactive documentation
+html_theme_options = {
+    **globals().get("html_theme_options", {}),
+    "navbar_center": ["navbar-nav", "interactive-nav"],
+    "announcement": "Interactive Documentation: Run examples, visualize training, collaborate!",
+}
 
-class TryItDirective(Directive):
-    """Directive to create interactive 'Try It' sections."""
-    required_arguments = 1  # Feature name
+# Custom sidebar for interactive features
+html_sidebars = {
+    "**": [
+        "sidebar-logo",
+        "search-field",
+        "sidebar-nav",
+        "interactive-sidebar",
+        "collaborative-annotations",
+    ]
+}
+
+# Notebook execution settings
+nbsphinx_execute = "never"  # We handle execution via JupyterLite
+nbsphinx_allow_errors = True
+
+# Mermaid configuration for diagrams
+mermaid_output_format = "svg"
+mermaid_init_js = "mermaid.initialize({startOnLoad:true, theme:'default'});"
+
+# Video settings for tutorial videos
+video_enforce_extra_source = False
+
+# Custom roles for interactive elements
+rst_prolog = """
+.. role:: interactive-note
+   :class: interactive-note
+
+.. role:: runnable-example
+   :class: runnable-example
+
+.. role:: gpu-monitor
+   :class: gpu-monitor
+"""
+
+# Add custom directives
+from docutils.parsers.rst import directives
+from docutils.parsers.rst.directives.admonition import BaseAdmonition
+
+class InteractiveNote(BaseAdmonition):
+    node_class = nodes.note
+    has_content = True
+    required_arguments = 0
     optional_arguments = 0
-    has_content = True
-    
-    def run(self):
-        feature_name = self.arguments[0]
-        code_content = '\n'.join(self.content)
-        
-        # Create container for interactive section
-        container = nodes.container(classes=['try-it-section', f'try-it-{feature_name}'])
-        
-        # Add header
-        header = nodes.rubric(text=f"Try It: {feature_name.replace('-', ' ').title()}")
-        container += header
-        
-        # Add code block
-        code_block = nodes.literal_block(code_content, code_content)
-        code_block['language'] = 'python'
-        container += code_block
-        
-        # Add interactive controls
-        controls = nodes.container(classes=['try-it-controls'])
-        run_button = nodes.inline(text="▶ Run", classes=['run-button'])
-        reset_button = nodes.inline(text="↺ Reset", classes=['reset-button'])
-        controls += run_button
-        controls += reset_button
-        container += controls
-        
-        # Add output area
-        output = nodes.container(classes=['try-it-output'])
-        container += output
-        
-        return [container]
+    option_spec = {
+        "title": directives.unchanged,
+        "kernel": directives.unchanged,
+    }
 
-class ModelCompareDirective(Directive):
-    """Directive for model comparison tools."""
-    has_content = True
+def setup(app):
+    app.add_directive("interactive-note", InteractiveNote)
+    app.add_js_file("js/interactive.js")
+    app.add_css_file("css/interactive.css")
     
-    def run(self):
-        container = nodes.container(classes=['model-comparison-widget'])
-        container += nodes.rubric(text="Model Comparison Tool")
-        
-        # Add model selector
-        model_selector = nodes.container(classes=['model-selector'])
-        container += model_selector
-        
-        # Add comparison metrics
-        metrics = nodes.container(classes=['comparison-metrics'])
-        container += metrics
-        
-        return [container]
+    # Add custom events for interactive features
+    app.connect("html-page-context", add_interactive_context)
+    
+    return {
+        "version": "0.1",
+        "parallel_read_safe": True,
+        "parallel_write_safe": True,
+    }
 
-class HyperparameterTunerDirective(Directive):
-    """Directive for hyperparameter tuning widgets."""
-    has_content = True
-    
-    def run(self):
-        container = nodes.container(classes=['hyperparameter-tuner'])
-        container += nodes.rubric(text="Hyperparameter Tuning")
-        
-        # Add sliders for each hyperparameter
-        for param, value in interactive_config['default_hyperparameters'].items():
-            param_container = nodes.container(classes=['param-slider'])
-            param_container += nodes.paragraph(text=f"{param.replace('_', ' ').title()}:")
-            slider = nodes.inline(classes=['slider-widget'], attributes={'data-param': param, 'data-value': value})
-            param_container += slider
-            container += param_container
-        
-        return [container]
+def add_interactive_context(app, pagename, templatename, context, doctree):
+    """Add interactive feature flags to template context"""
+    context["interactive_features"] = interactive_features
+    context["jupyterlite_base_url"] = "_static/jupyterlite"
