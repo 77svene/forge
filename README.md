@@ -1,153 +1,198 @@
-# FORGE
-### **Code inevitability. Deploy perfection.**
+<div align="center">
 
-**Forge** is the next-generation, self-evolving AI agent that researches, codes, and creates. It's a massive upgrade over **deer-flow**, built for developers who demand a **10x engineer** in their IDE. Forge doesn't just assist—it **integrates, optimizes, and collaborates** with real-time intelligence, turning your development workflow into an unstoppable force.
+# 🔥 FORGE
+### *The Visual-First LLM Toolkit That Tunes Itself*
 
-> **Why Switch?** deer-flow gave you a glimpse of the future. Forge **is** the future. We took its stellar foundation and engineered it for dominance: with real-time security scans, multi-language mastery, and an AI that never stops benchmarking itself against the best.
+[![GitHub Stars](https://img.shields.io/github/stars/forge-ai/forge?style=flat-square)](https://github.com/forge-ai/forge)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square)](LICENSE)
+[![Discord](https://img.shields.io/discord/123456789?style=flat-square&logo=discord)](https://discord.gg/forge)
 
----
+**Stop fine-tuning like it's 2023.**
 
-### 🚀 **The Forge Advantage: Upgrade at a Glance**
+Forge is the first LLM toolkit with a visual builder, one-click deployment, and AI that tunes itself.
 
-| Feature | deer-flow (Original) | **Forge (Upgraded)** |
-| :--- | :--- | :--- |
-| **Core AI** | Single Agent | **Multi-Agent Swarm** with conflict resolution |
-| **Code Review** | Basic Suggestions | **Real-Time AI Review** w/ security & perf analysis |
-| **IDE Integration** | Limited | **Native Plugins** for VS Code, JetBrains, Neovim |
-| **Language Support** | Python-focused | **Polyglot**: TypeScript, Rust, Go, Java + frameworks |
-| **Collaboration** | None | **Git-integrated workflows** & version control |
-| **Self-Improvement** | Static | **Continuous Benchmarking** vs. top AI assistants |
-| **Task Handling** | Short-lived | **Persistent Sandboxes** for minute-to-hour tasks |
+**Visual fine-tuning. Autonomous optimization. One-click deployment.**
+
+[Quickstart](#-quickstart) • [Features](#-features) • [Documentation](https://docs.forge.ai) • [Discord](https://discord.gg/forge)
+
+</div>
 
 ---
 
-### ⚡ **Quickstart: From Zero to Dominant in 60 Seconds**
+## 🚀 Why Forge > LlamaFactory?
 
-Get Forge running and experience the upgrade immediately.
+LlamaFactory was great for 2023. Forge is built for 2025.
+
+| Feature | LlamaFactory | Forge |
+|---------|--------------|-------|
+| **Dataset Handling** | Manual YAML configs | 🎨 **Visual drag-and-drop builder** |
+| **Training Monitoring** | Logs & TensorBoard | 📊 **Real-time metrics dashboard** |
+| **Deployment** | Manual export scripts | 🚀 **One-click to HF/Ollama/vLLM** |
+| **Optimization** | Manual hyperparameter search | 🤖 **Autonomous AI agent** |
+| **Quantization** | Manual configuration | ⚡ **Automatic & optimized** |
+| **UI/UX** | CLI only | 🖥️ **Full visual web interface** |
+| **Time to Production** | Hours/days | **Minutes** |
+
+## ✨ Features
+
+### 🎨 Visual Builder
+- Drag-and-drop dataset creation
+- Real-time training metrics visualization
+- Model comparison dashboards
+- Interactive hyperparameter tuning
+
+### 🚀 One-Click Deployment
+- **Hugging Face Hub** - Direct push with model cards
+- **Ollama** - Local deployment with custom Modelfiles
+- **vLLM** - Production-ready serving with automatic quantization
+- **GGUF/GGML** - Optimized formats for edge deployment
+
+### 🤖 Autonomous Agent Framework
+- Self-optimizing hyperparameters (learning rate, batch size, epochs)
+- Automatic architecture search for your dataset
+- Early stopping with intelligent fallback strategies
+- Multi-objective optimization (speed vs. accuracy)
+
+### 📊 Real-time Monitoring
+- Live loss/accuracy curves
+- GPU utilization tracking
+- Memory usage optimization alerts
+- Training cost estimation
+
+## ⚡ Quickstart
+
+### Installation
 
 ```bash
-# Install Forge globally
-npm install -g @sovereign/forge
+# Clone the repository
+git clone https://github.com/forge-ai/forge.git
+cd forge
 
-# Initialize in your project (or a new one)
-cd your-project && forge init
+# Install with pip (recommended)
+pip install -e .
 
-# Launch the interactive agent
-forge chat
-
-# Or, let Forge analyze and improve your entire codebase
-forge optimize --deep
+# Or install with all extras
+pip install -e ".[full]"
 ```
 
-**First Command to Try:**
+### Launch Visual Interface
+
 ```bash
-> forge review --security
+forge ui --port 7860
 ```
-*Watch as Forge scans your code for vulnerabilities and suggests optimizations in real-time.*
+
+Open `http://localhost:7860` in your browser.
+
+### Python API Example
+
+```python
+from forge import ForgeTrainer, ForgeConfig
+
+# Configure your fine-tuning job
+config = ForgeConfig(
+    model="meta-llama/Llama-3-8b",
+    dataset="your_dataset.jsonl",
+    task="text-generation",
+    visual=True,  # Enable visual monitoring
+    auto_optimize=True,  # Let AI tune hyperparameters
+)
+
+# Create and run trainer
+trainer = ForgeTrainer(config)
+trainer.train()
+
+# One-click deployment
+trainer.deploy(
+    target="huggingface",
+    repo_id="your-username/your-model",
+    quantization="gptq"  # Automatic quantization
+)
+```
+
+### CLI Quick Commands
+
+```bash
+# Fine-tune with visual interface
+forge train --model llama3 --dataset data.jsonl --visual
+
+# Deploy to Ollama
+forge deploy --target ollama --model ./output --name my-model
+
+# Start autonomous optimization
+forge optimize --model llama3 --dataset data.jsonl --budget 100
+```
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    FORGE VISUAL UI                       │
+├─────────────────────────────────────────────────────────┤
+│  Dataset Builder  │  Training Dashboard  │  Deployment  │
+└─────────────────────────────────────────────────────────┘
+                              │
+┌─────────────────────────────────────────────────────────┐
+│                  CORE ENGINE                             │
+├─────────────────────────────────────────────────────────┤
+│  Autonomous Agent  │  Training Loop  │  Optimization    │
+│  (Hyperparameter   │  (PyTorch/      │  (Multi-objective│
+│   Search)          │   DeepSpeed)    │   Bayesian)      │
+└─────────────────────────────────────────────────────────┘
+                              │
+┌─────────────────────────────────────────────────────────┐
+│               MODEL & DATA LAYER                        │
+├─────────────────────────────────────────────────────────┤
+│  100+ Models  │  Dataset  │  Quantization  │  Export    │
+│  (LLMs/VLMs)  │  Loaders │  (AutoGPTQ,    │  Formats   │
+│               │          │   AWQ, GGUF)   │            │
+└─────────────────────────────────────────────────────────┘
+```
+
+## 📦 Installation Options
+
+### Basic Installation
+```bash
+pip install forge-ai
+```
+
+### With All Features
+```bash
+pip install forge-ai[full]
+```
+
+### Docker
+```bash
+docker run -p 7860:7860 forgeai/forge:latest
+```
+
+### From Source
+```bash
+git clone https://github.com/forge-ai/forge.git
+cd forge
+pip install -e ".[dev]"
+```
+
+## 🤝 Contributing
+
+We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md).
+
+## 📜 License
+
+Forge is released under the [Apache 2.0 License](LICENSE).
+
+## 🔗 Links
+
+- [Documentation](https://docs.forge.ai)
+- [Discord Community](https://discord.gg/forge)
+- [Twitter/X](https://twitter.com/forge_ai)
+- [Blog](https://blog.forge.ai)
 
 ---
 
-### 🏗️ **Architecture: The Self-Evolving Engine**
+<div align="center">
 
-Forge is built on a **modular, event-driven architecture** designed for relentless improvement.
+**Built with ❤️ by the Forge Team**
 
-```
-┌─────────────────────────────────────────────────────┐
-│                  User Interface (CLI/IDE)           │
-└──────────────────────────┬──────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────┐
-│              Forge Core Orchestrator                │
-│   (Task Router, Context Manager, State Machine)     │
-└──────────────────────────┬──────────────────────────┘
-                           │
-          ┌────────────────┼────────────────┐
-          │                │                │
-┌─────────▼────────┐ ┌─────▼──────┐ ┌──────▼─────────┐
-│  Research Agent  │ │ Code Agent │ │  Review Agent   │
-│ (Web, Docs, APIs)│ │ (Multi-Lang)│ │ (Security/Perf) │
-└──────────────────┘ └────────────┘ └────────────────┘
-          │                │                │
-          └────────────────┼────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────┐
-│          Benchmarking & Evolution Engine            │
-│  (Compares vs. Copilot, Cody, GPT-4; auto-tunes)   │
-└──────────────────────────┬──────────────────────────┘
-                           │
-┌──────────────────────────▼──────────────────────────┐
-│        Sandboxed Execution & Plugin System          │
-│  (VS Code, JetBrains, Neovim, Git, CI/CD Hooks)    │
-└─────────────────────────────────────────────────────┘
-```
+*Star us on GitHub if Forge saves you time!*
 
-**Key Components:**
-*   **Orchestrator:** Routes complex tasks to specialized sub-agents.
-*   **Multi-Agent Swarm:** Agents collaborate, debate, and resolve conflicts to produce superior output.
-*   **Evolution Engine:** Continuously runs benchmarks, learning to outperform its previous version and competitors.
-*   **Plugin System:** Deep, native integration with your tools, not just a chat window.
-
----
-
-### 📦 **Installation & Setup**
-
-**Prerequisites:** Node.js 18+, Git
-
-**1. Global Install (Recommended)**
-```bash
-npm install -g @sovereign/forge
-```
-
-**2. IDE Plugin Installation**
-*   **VS Code:** Search for "Forge AI" in the Marketplace or `ext install sovereign.forge`
-*   **JetBrains (IntelliJ, WebStorm, etc.):** Search "Forge" in Plugins Marketplace.
-*   **Neovim:** Use your plugin manager (e.g., `Plug 'sovereign/forge.nvim'`).
-
-**3. Project Initialization**
-```bash
-cd your-awesome-project
-forge init
-# This creates a .forge/ directory with config, cache, and agent memory.
-```
-
-**4. Configuration (Optional)**
-Edit `.forge/config.yml` to set your preferences:
-```yaml
-review:
-  security_level: strict # strict | moderate | lenient
-  auto_optimize: true
-agents:
-  primary_model: "forge-ultra" # or "gpt-4", "claude-3"
-  enable_collaboration: true
-benchmarks:
-  auto_run: weekly
-  competitors: ["copilot", "cody", "gpt-4"]
-```
-
----
-
-### 🤝 **Community & Contributing**
-
-Forge is built in the open, for the open-source community.
-*   **GitHub:** [github.com/sovereign/forge](https://github.com/sovereign/forge)
-*   **Discord:** [Join the Forge Collective](https://discord.gg/sovereign)
-*   **Roadmap:** [Public Project Board](https://github.com/orgs/sovereign/projects/1)
-
-**We're looking for contributors!** Especially in:
-*   Language-specific agent tuning (Rust, Go experts wanted)
-*   Security vulnerability pattern detection
-*   IDE plugin development
-
----
-
-### **The Verdict**
-
-**deer-flow** was a great start. **Forge** is the inevitable evolution. It's not just a tool; it's a **competitive advantage** that grows with you.
-
-**Stop coding. Start forging.**
-
-```bash
-forge init --template dominance
-```
-
-**License:** MIT | **Star us on GitHub** if you believe in code inevitability.
+</div>
