@@ -1,6 +1,5 @@
 # Configuration file for the Sphinx documentation builder.
 
-
 # Define common settings here
 project = "forge"
 copyright = "2024, forge Team"
@@ -11,7 +10,9 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
     "myst_parser",
-    "sphinx_jupyterlite",  # Add JupyterLite integration for interactive documentation
+    "jupyterlite_sphinx",
+    "sphinxcontrib.httpdomain",
+    "sphinx_tabs.tabs",
 ]
 
 templates_path = ["_templates"]
@@ -23,13 +24,16 @@ html_static_path = ["_static"]
 
 html_js_files = [
     "js/switcher.js",
-    "js/playground.js",  # Add playground functionality
-    "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js",  # Pyodide for in-browser Python
+    "js/jupyterlite-helper.js",
+    "js/interactive-docs.js",
+    "js/annotation-system.js",
+    "https://cdn.plot.ly/plotly-2.24.1.min.js",
 ]
 
 html_css_files = [
     "css/lang-switcher.css",
-    "css/playground.css",  # Add playground styling
+    "css/interactive-docs.css",
+    "css/annotation-system.css",
 ]
 
 myst_enable_extensions = [
@@ -38,86 +42,101 @@ myst_enable_extensions = [
 ]
 myst_heading_anchors = 3
 
-# JupyterLite configuration for interactive documentation
-jupyterlite_dir = "_notebooks"  # Directory for notebook content
+# JupyterLite configuration
 jupyterlite_config = {
-    "LiteBuildConfig": {
-        "federated_extensions": [
-            "https://conda.anaconda.org/conda-forge/noarch/ipycanvas-0.13.1-pyhd8ed1ab_0.tar.bz2",
-            "https://conda.anaconda.org/conda-forge/noarch/ipycytoscape-1.3.3-pyhd8ed1ab_1.tar.bz2",
-            "https://conda.anaconda.org/conda-forge/noarch/ipympl-0.9.3-pyhd8ed1ab_0.tar.bz2",
-            "https://conda.anaconda.org/conda-forge/noarch/ipywidgets-8.1.0-pyhd8ed1ab_0.tar.bz2",
-        ],
-    },
-    "PiPyConfig": {
-        "piplite_urls": [
-            "https://files.pythonhosted.org/packages/py3/i/ipywidgets/ipywidgets-8.1.0-py3-none-any.whl",
+    "lite": {
+        "settings": {
+            "theme": "light",
+        },
+        "pipliteUrls": [
+            "https://pypi.org/simple",
         ],
     },
 }
 
-# Playground configuration
-playground_config = {
+# Interactive documentation settings
+interactive_docs_config = {
+    "enable_live_examples": True,
+    "enable_gpu_monitoring": True,
+    "enable_collaborative_annotations": True,
+    "enable_model_playground": True,
     "default_kernel": "python",
-    "enable_widgets": True,
-    "max_execution_time": 30,  # seconds
-    "allowed_packages": [
-        "numpy",
-        "pandas",
-        "matplotlib",
-        "torch",
-        "transformers",
-        "datasets",
-        "peft",
-        "trl",
-    ],
+    "max_execution_time": 300,
+    "show_performance_charts": True,
+    "enable_export": True,
 }
 
-# Add custom directives for interactive elements
+# Real-time visualization settings
+visualization_config = {
+    "update_interval": 1000,  # ms
+    "enable_gpu_metrics": True,
+    "enable_training_metrics": True,
+    "chart_height": 400,
+    "enable_download": True,
+}
+
+# Collaborative annotation settings
+annotation_config = {
+    "enable_public_annotations": True,
+    "enable_private_annotations": False,
+    "annotation_api_url": "/api/annotations",
+    "enable_upvoting": True,
+    "enable_threaded_comments": True,
+}
+
+# Model playground settings
+model_playground_config = {
+    "supported_models": [
+        "llama-2-7b",
+        "llama-2-13b",
+        "llama-2-70b",
+        "mistral-7b",
+        "falcon-7b",
+    ],
+    "max_input_length": 2048,
+    "enable_streaming": True,
+    "default_temperature": 0.7,
+    "enable_parameter_tuning": True,
+}
+
+# Sphinx configuration for better interactive experience
+html_theme_options = {
+    "navigation_depth": 4,
+    "collapse_navigation": False,
+    "sticky_navigation": True,
+    "includehidden": True,
+    "titles_only": False,
+}
+
+# Enable MyST parser for Jupyter notebooks
+myst_enable_extensions = [
+    "colon_fence",
+    "deflist",
+    "dollarmath",
+    "html_image",
+    "linkify",
+    "replacements",
+    "smartquotes",
+    "substitution",
+    "tasklist",
+]
+
+# Additional configuration for live code execution
+jupyterlite_dir = "_static/jupyterlite"
+jupyterlite_contents_dir = "notebooks"
+
+# Custom roles and directives
 rst_prolog = """
-.. |try_it| raw:: html
+.. role:: python(code)
+   :language: python
+   :class: highlight
 
-   <button class="try-it-button" onclick="openPlayground(this)">Try It</button>
+.. role:: output(code)
+   :language: text
+   :class: output
 
-.. |playground| raw:: html
-
-   <div class="playground-container">
-     <div class="playground-header">
-       <span class="playground-title">Interactive Playground</span>
-       <button class="playground-close" onclick="closePlayground(this)">×</button>
-     </div>
-     <div class="playground-editor" data-language="python"></div>
-     <div class="playground-controls">
-       <button class="playground-run" onclick="runPlayground(this)">▶ Run</button>
-       <button class="playground-reset" onclick="resetPlayground(this)">↺ Reset</button>
-     </div>
-     <div class="playground-output"></div>
-   </div>
+.. |run-button| replace:: ▶️ Run
+.. |reset-button| replace:: 🔄 Reset
+.. |share-button| replace:: 📤 Share
+.. |annotate-button| replace:: ✏️ Annotate
 """
-
-# Setup for interactive model comparison
-def setup(app):
-    app.add_css_file("css/playground.css")
-    app.add_js_file("js/playground.js")
-    app.add_js_file("js/model-comparison.js")
-    
-    # Add custom configuration to the build environment
-    app.connect("builder-inited", configure_playground)
-    
-    return {
-        "version": "0.1",
-        "parallel_read_safe": True,
-        "parallel_write_safe": True,
-    }
-
-def configure_playground(app):
-    """Configure the interactive playground during build."""
-    import os
-    import json
-    
-    # Create playground configuration file
-    playground_config_path = os.path.join(app.outdir, "_static", "playground-config.json")
-    os.makedirs(os.path.dirname(playground_config_path), exist_ok=True)
-    
-    with open(playground_config_path, "w") as f:
-        json.dump(playground_config, f, indent=2)
