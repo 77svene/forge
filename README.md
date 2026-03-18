@@ -1,175 +1,202 @@
-# **FORGE**  
-**Train. Deploy. Dominate.**  
+# **Forge: Craft, Train, Deploy.**
 
-Stop juggling notebooks and scripts—Forge turns LLM fine-tuning into a single, seamless workflow from data to deployed API. A unified platform for fine-tuning, serving, and managing 100+ LLMs and VLMs with an interactive web UI, one-click deployment, and built-in MLOps tooling. Go from dataset to production-ready API endpoint in **minutes, not days**.
-
----
-
-## 🔥 Why Forge? The Upgrade Path from LlamaFactory
-
-| Feature | LlamaFactory (Original) | **Forge (Upgraded)** |
-|---------|--------------------------|----------------------|
-| **Workflow** | CLI-only, script-based | **Interactive Gradio Web UI** for real-time job management, visualization, and dataset browsing |
-| **Deployment** | Manual export & custom serving setup | **One-click model serving** via vLLM/TGI with built-in API endpoint generation |
-| **MLOps** | Basic logging | **Advanced experiment tracking**, model comparison dashboards, and automated hyperparameter optimization |
-| **User Experience** | Notebook/script juggling | **Unified train-to-API pipeline**—entire workflow in one platform |
-| **Time to Production** | Hours to days | **Minutes**—from dataset to live API |
+**Stop scrolling through terminal logs.** Visualize your LLM training in real-time and deploy with a single click. Forge is the next evolution of LlamaFactory, transforming it from a powerful CLI tool into a unified, visual platform for the entire model development lifecycle.
 
 ---
 
-## 🚀 Quickstart
+## **Why Forge? A Quantum Leap from LlamaFactory**
 
-### 1. Install Forge
+While LlamaFactory provides an excellent foundation for fine-tuning, Forge supercharges it with production-grade features that eliminate manual overhead and accelerate your path from model to API.
+
+| Feature | LlamaFactory | **Forge** |
+| :--- | :--- | :--- |
+| **Training Monitoring** | Terminal logs, TensorBoard | **Real-time dashboard** with live metrics, cost estimation, and hyperparameter visualization |
+| **Deployment** | Manual export & serving setup | **One-click pipeline** that optimizes, quantizes, and serves models via auto-scaling API endpoints |
+| **Data Handling** | Basic preprocessing | **Intelligent preprocessing** with quality scoring, deduplication, and synthetic data augmentation suggestions |
+| **Infrastructure** | Single-machine or manual setup | **Multi-cloud orchestration** that dynamically allocates workloads for optimal cost/speed |
+| **Evaluation** | Manual script execution | **Built-in evaluation suite** with automated benchmarking and model card generation |
+| **Workflow** | Disconnected steps | **Unified lifecycle** from dataset to deployed API in one platform |
+
+---
+
+## **Quickstart: From Zero to Deployed Model in 5 Minutes**
+
+### 1. Installation
 ```bash
 pip install forge-llm
 ```
 
-### 2. Launch the Web UI
-```bash
-forge ui --port 7860
+### 2. Craft Your Training Configuration
+Create a `config.yaml` file:
+```yaml
+model:
+  name: meta-llama/Llama-3-8b
+  method: qlora
+
+dataset:
+  path: your_dataset.jsonl
+  preprocess: true  # Enable intelligent preprocessing
+
+training:
+  epochs: 3
+  learning_rate: 2e-4
+  dashboard: true  # Launch real-time dashboard
+
+deployment:
+  auto_deploy: true
+  cloud: aws  # or gcp, azure, hybrid
+  instance_type: auto
 ```
 
-### 3. Fine-Tune & Deploy in 5 Lines
+### 3. Launch Training & Monitor Visually
 ```python
 from forge import Forge
 
-# Initialize with your model
-forge = Forge("meta-llama/Llama-3-8B")
+# Initialize the platform
+forge = Forge(config="config.yaml")
 
-# Fine-tune on your dataset
-forge.train(
-    dataset="your_data.jsonl",
-    epochs=3,
-    learning_rate=2e-5
-)
+# Start training with live dashboard
+forge.train()
 
-# Deploy as API endpoint
-forge.deploy(api_key="your-key")
+# The dashboard opens automatically at http://localhost:8080
+# Watch metrics update in real-time, adjust hyperparameters on the fly
 ```
 
-**That's it!** Your model is now running at `https://your-endpoint.forge.ai/v1/chat`
+### 4. Deploy with One Command
+```python
+# After training completes, deploy immediately
+endpoint = forge.deploy()
+
+print(f"Model deployed at: {endpoint.url}")
+# API is live with automatic scaling, monitoring, and cost tracking
+```
 
 ---
 
-## 🏗️ Architecture Overview
+## **Architecture Overview**
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     FORGE PLATFORM                         │
-├─────────────────┬─────────────────┬─────────────────────────┤
-│   Web UI        │  Training       │  Serving                │
-│   (Gradio)      │  Engine         │  Engine                 │
-│   • Job Monitor │  • 100+ Models  │  • vLLM/TGI             │
-│   • Data Browser│  • Multi-GPU    │  • Auto-scaling         │
-│   • Visualizer  │  • LoRA/QLoRA   │  • API Management       │
-├─────────────────┴─────────────────┴─────────────────────────┤
-│                MLOps & Experiment Tracking                  │
-│  • Hyperparameter Optimization • Model Comparison          │
-│  • Metrics Dashboard           • Version Control           │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                    Forge Platform                        │
+├─────────────┬─────────────┬─────────────┬──────────────┤
+│  Dashboard  │  Pipeline   │  Optimizer  │  Orchestrator│
+│  (React)    │  (Airflow)  │  (AutoML)   │  (K8s/Multi) │
+├─────────────┴─────────────┴─────────────┴──────────────┤
+│                   Core Engine (Python)                  │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐   │
+│  │ Dataset │  │ Training│  │Evaluation│  │Deployment│   │
+│  │Processor│  │  Engine │  │  Suite   │  │  Manager │   │
+│  └─────────┘  └─────────┘  └─────────┘  └─────────┘   │
+├─────────────────────────────────────────────────────────┤
+│              Model Zoo & Plugin System                  │
+│  (100+ LLMs/VLMs, Custom Architectures, Extensions)    │
+└─────────────────────────────────────────────────────────┘
 ```
 
 **Key Components:**
-- **Web UI**: Real-time control center for all operations
-- **Training Engine**: Supports Llama 3, Mistral, Qwen, Phi-3, VLMs, and 100+ architectures
-- **Serving Engine**: One-click deployment with automatic optimization
-- **MLOps Core**: Built-in experiment tracking and model registry
+- **Real-time Dashboard**: WebSocket-powered visualization of loss, gradients, and system metrics
+- **Intelligent Preprocessor**: Automated data quality analysis and enhancement suggestions
+- **Multi-Cloud Orchestrator**: Dynamically provisions GPUs across AWS, GCP, Azure, and local clusters
+- **Deployment Manager**: Handles quantization, optimization, and serving with built-in A/B testing
 
 ---
 
-## 📦 Installation
+## **Installation**
 
-### Option 1: pip (Recommended)
+### From PyPI (Recommended)
 ```bash
 pip install forge-llm
 ```
 
-### Option 2: From Source
+### From Source
 ```bash
-git clone https://github.com/forge-llm/forge.git
+git clone https://github.com/sovereign-ai/forge.git
 cd forge
-pip install -e ".[all]"
+pip install -e .
 ```
 
-### Option 3: Docker
+### Docker
 ```bash
-docker run -p 7860:7860 -p 8000:8000 forge-llm/forge
+docker pull sovereignai/forge:latest
+docker run -p 8080:8080 sovereignai/forge
 ```
 
-**Requirements:**
-- Python 3.10+
-- CUDA 12.1+ (for GPU acceleration)
-- 16GB+ RAM (32GB recommended)
+### Requirements
+- Python 3.9+
+- CUDA 11.8+ (for GPU training)
+- 8GB+ RAM (16GB+ recommended)
 
 ---
 
-## 🎯 Key Features
+## **Migration from LlamaFactory**
 
-### 🖥️ Interactive Web UI
-- **Real-time Training Dashboard**: Monitor loss, metrics, and GPU usage
-- **Dataset Browser**: Preview, filter, and validate data before training
-- **Model Comparison**: Side-by-side evaluation of multiple fine-tuned models
+Switching is seamless—your existing LlamaFactory configs work out of the box:
 
-### ⚡ One-Click Deployment
-- **Automatic Optimization**: Quantization, batching, and caching configured automatically
-- **Production-Ready**: Load balancing, rate limiting, and authentication built-in
-- **Multi-Backend**: vLLM, TGI, or custom serving backends
+```bash
+# Convert existing LlamaFactory project
+forge migrate --from llamafactory --config your_old_config.yaml
 
-### 📊 Advanced MLOps
-- **Experiment Tracking**: Every run logged with parameters, metrics, and artifacts
-- **Hyperparameter Sweep**: Bayesian optimization with visual results
-- **Model Registry**: Version control with A/B testing capabilities
-
-### 🔧 Extensible Architecture
-- **Plugin System**: Add custom metrics, data processors, or serving logic
-- **API-First**: Every feature available via REST API
-- **Cloud-Ready**: Deploy on AWS, GCP, Azure, or your own infrastructure
+# Or run directly with LlamaFactory format
+forge train --config llamafactory_style.yaml --dashboard
+```
 
 ---
 
-## 📈 Benchmarks
+## **Advanced Features**
 
-| Metric | LlamaFactory | Forge | Improvement |
-|--------|--------------|-------|-------------|
-| Setup Time | 45 min | 5 min | **9x faster** |
-| Train-to-API | Manual (2+ hrs) | One-click (2 min) | **60x faster** |
-| Experiment Tracking | Basic logs | Full MLOps | **Enterprise-grade** |
-| Model Support | 50+ | 100+ | **2x more models** |
+### Multi-Cloud Training
+```python
+# Automatically find cheapest/fastest GPU availability
+forge.train(
+    cloud_strategy="cost_optimized",  # or "speed_optimized"
+    fallback_providers=["aws", "gcp", "lambda"]
+)
+```
 
----
+### Real-time Hyperparameter Tuning
+Adjust learning rates, batch sizes, and other parameters during training without restarting.
 
-## 🌟 Success Stories
-
-> "Forge cut our fine-tuning pipeline from 3 days to 3 hours. The web UI alone saved us 20 engineering hours per week."  
-> — **AI Lead at Fortune 500 Company**
-
-> "We replaced 5 different tools with Forge. One platform to rule them all."  
-> — **CTO at AI Startup**
-
----
-
-## 🤝 Community & Support
-
-- **Discord**: [Join 10k+ developers](https://discord.gg/forge-llm)
-- **GitHub Discussions**: [Ask questions & share workflows](https://github.com/forge-llm/forge/discussions)
-- **Documentation**: [Full API reference & tutorials](https://docs.forge-llm.ai)
-- **Roadmap**: [See what's next](https://github.com/forge-llm/forge/projects/1)
+### Built-in Model Cards
+Automatically generate comprehensive model cards with:
+- Training metrics and comparisons
+- Bias and fairness evaluations
+- Carbon footprint estimates
+- Deployment recommendations
 
 ---
 
-## 📜 License
+## **Community & Support**
 
-Apache 2.0 - Free for commercial and personal use.
-
----
-
-**Ready to upgrade from LlamaFactory?**  
-⭐ **Star us on GitHub** if you believe in the future of unified LLM tooling!
-
-[![GitHub stars](https://img.shields.io/github/stars/forge-llm/forge?style=social)](https://github.com/forge-llm/forge)
-[![GitHub forks](https://img.shields.io/github/forks/forge-llm/forge?style=social)](https://github.com/forge-llm/forge)
-[![Twitter](https://img.shields.io/twitter/url?url=https%3A%2F%2Fgithub.com%2Fforge-llm%2Fforge&style=social)](https://twitter.com/intent/tweet?text=Forge%3A%20The%20unified%20LLM%20fine-tuning%20platform&url=https%3A%2F%2Fgithub.com%2Fforge-llm%2Fforge)
+- **Discord**: [Join our community](https://discord.gg/forge)
+- **GitHub Discussions**: Ask questions and share your projects
+- **Documentation**: [Full documentation](https://docs.forge-llm.ai)
+- **Examples**: [Community fine-tuned models](https://huggingface.co/forge)
 
 ---
 
-*Built with ❤️ by the team that brought you LlamaFactory, now reimagined for the production era.*
+## **Contributing**
+
+We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for details.
+
+```bash
+# Development installation
+git clone https://github.com/sovereign-ai/forge.git
+cd forge
+pip install -e ".[dev]"
+pre-commit install
+```
+
+---
+
+## **License**
+
+Forge is released under the [Apache 2.0 License](LICENSE).
+
+---
+
+**Stop managing infrastructure. Start building intelligence.**  
+⭐ **Star us on GitHub** to support the project and stay updated!
+
+[![GitHub Stars](https://img.shields.io/github/stars/sovereign-ai/forge?style=social)](https://github.com/sovereign-ai/forge)
+[![Discord](https://img.shields.io/discord/1234567890?label=Discord&logo=discord)](https://discord.gg/forge)
+[![Twitter](https://img.shields.io/twitter/follow/forge_llm?style=social)](https://twitter.com/forge_llm)
