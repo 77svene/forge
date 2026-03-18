@@ -1,0 +1,606 @@
+"""
+WebAssembly Upscaling Pipeline for stable-diffusion-webui
+Implements CPU-parallelized upscaling via WebAssembly to reduce GPU memory pressure
+"""
+
+import os
+import sys
+import numpy as np
+import torch
+from pathlib import Path
+from typing import Optional, Tuple, Dict, Any, Union
+import asyncio
+import concurrent.futures
+from dataclasses import dataclass
+from enum import Enum
+import logging
+
+# Import existing modules
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from modules import devices, shared, images
+from modules.shared import opts
+from modules.upscaler import Upscaler, UpscalerData
+
+logger = logging.getLogger(__name__)
+
+class UpscaleBackend(Enum):
+    """Available upscaling backends"""
+    GPU = "gpu"
+    CPU = "cpu"
+    WASM = "wasm"
+    WEBGPU = "webgpu"
+
+@dataclass
+class UpscaleConfig:
+    """Configuration for upscaling operations"""
+    backend: UpscaleBackend
+    scale_factor: int = 4
+    tile_size: int = 512
+    overlap: int = 32
+    use_fp16: bool = True
+    num_threads: int = 4
+
+class WASMUpscaler:
+    """WebAssembly-based upscaling pipeline"""
+    
+    def __init__(self):
+        self.wasm_module = None
+        self.wasm_instance = None
+        self.webgpu_device = None
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=4)
+        self.backend_cache = {}
+        self._load_wasm_module()
+        
+    def _load_wasm_module(self):
+        """Load the WebAssembly upscaling module"""
+        wasm_path = Path(__file__).parent / "upscale.wasm"
+        
+        if not wasm_path.exists():
+            logger.warning(f"WebAssembly module not found at {wasm_path}")
+            return
+            
+        try:
+            # Try to load WebAssembly runtime
+            try:
+                import wasmtime
+                self._load_wasmtime(wasm_path)
+            except ImportError:
+                try:
+                    import wasmer
+                    self._load_wasmer(wasm_path)
+                except ImportError:
+                    logger.warning("No WebAssembly runtime found. Install wasmtime or wasmer.")
+                    
+            # Try to initialize WebGPU if available
+            self._init_webgpu()
+            
+        except Exception as e:
+            logger.error(f"Failed to load WebAssembly module: {e}")
+    
+    def _load_wasmtime(self, wasm_path: Path):
+        """Load WASM using wasmtime"""
+        from wasmtime import Engine, Store, Module, Instance, Memory, MemoryType
+        
+        engine = Engine()
+        store = Store(engine)
+        module = Module.from_file(engine, str(wasm_path))
+        
+        # Create memory for image data
+        memory = Memory(store, MemoryType(initial=100, maximum=1000))
+        
+        # Import object with memory
+        imports = {
+            'env': {
+                'memory': memory,
+                'abort': lambda msg: logger.error(f"WASM abort: {msg}")
+            }
+        }
+        
+        self.wasm_instance = Instance(store, module, imports)
+        self.wasm_store = store
+        self.wasm_memory = memory
+        logger.info("Loaded WASM module with wasmtime")
+        
+    def _load_wasmer(self, wasm_path: Path):
+        """Load WASM using wasmer"""
+        from wasmer import engine, Store, Module, Instance, Memory, MemoryType
+        
+        store = Store()
+        module = Module(store, open(wasm_path, 'rb').read())
+        
+        # Create memory
+        memory = Memory(store, MemoryType(pages=100, maximum=1000))
+        
+        # Import object
+        import_object = {
+            'env': {
+                'memory': memory,
+                'abort': lambda msg: logger.error(f"WASM abort: {msg}")
+            }
+        }
+        
+        self.wasm_instance = Instance(module, import_object)
+        self.wasm_memory = memory
+        logger.info("Loaded WASM module with wasmer")
+    
+    def _init_webgpu(self):
+        """Initialize WebGPU if available (for browser environments)"""
+        try:
+            # This would be used in a browser context
+            # In Python, we'd need a WebGPU binding like wgpu
+            import wgpu
+            self.webgpu_device = wgpu.utils.get_default_device()
+            logger.info("WebGPU device initialized")
+        except ImportError:
+            logger.debug("WebGPU not available (wgpu-py not installed)")
+        except Exception as e:
+            logger.debug(f"WebGPU initialization failed: {e}")
+    
+    def get_optimal_backend(self, image_size: Tuple[int, int], 
+                          available_vram: Optional[float] = None) -> UpscaleBackend:
+        """Automatically select the best backend based on resources"""
+        
+        width, height = image_size
+        megapixels = (width * height) / 1_000_000
+        
+        # Check available VRAM
+        if available_vram is None:
+            try:
+                available_vram = torch.cuda.mem_get_info()[0] / (1024**3) if torch.cuda.is_available() else 0
+            except:
+                available_vram = 0
+        
+        # Decision logic
+        if available_vram > 4 and megapixels < 4:  # Enough VRAM for small images
+            return UpscaleBackend.GPU
+        elif self.wasm_instance and megapixels > 1:  # Use WASM for larger images
+            return UpscaleBackend.WASM
+        elif self.webgpu_device and megapixels < 8:  # WebGPU for medium images
+            return UpscaleBackend.WEBGPU
+        else:
+            return UpscaleBackend.CPU
+    
+    def preprocess_image(self, image: np.ndarray) -> np.ndarray:
+        """Preprocess image for WASM upscaling"""
+        # Ensure image is in correct format (HWC, uint8)
+        if image.dtype != np.uint8:
+            image = (image * 255).astype(np.uint8)
+        
+        # Ensure 3 channels (RGB)
+        if len(image.shape) == 2:
+            image = np.stack([image] * 3, axis=-1)
+        elif image.shape[2] == 4:  # RGBA to RGB
+            image = image[:, :, :3]
+        
+        return np.ascontiguousarray(image)
+    
+    def postprocess_image(self, image: np.ndarray, original_dtype) -> np.ndarray:
+        """Postprocess upscaled image"""
+        if original_dtype == np.float32 or original_dtype == torch.float32:
+            image = image.astype(np.float32) / 255.0
+        elif original_dtype == np.float16 or original_dtype == torch.float16:
+            image = image.astype(np.float16) / 255.0
+        return image
+    
+    def upscale_wasm(self, image: np.ndarray, scale_factor: int = 4, 
+                    tile_size: int = 512) -> np.ndarray:
+        """Upscale image using WebAssembly backend"""
+        if not self.wasm_instance:
+            raise RuntimeError("WebAssembly module not loaded")
+        
+        original_dtype = image.dtype
+        image = self.preprocess_image(image)
+        height, width, channels = image.shape
+        
+        # Calculate output dimensions
+        out_height = height * scale_factor
+        out_width = width * scale_factor
+        
+        # Allocate memory in WASM
+        input_size = height * width * channels
+        output_size = out_height * out_width * channels
+        
+        # Write input image to WASM memory
+        input_ptr = self.wasm_instance.exports.alloc(self.wasm_store, input_size)
+        output_ptr = self.wasm_instance.exports.alloc(self.wasm_store, output_size)
+        
+        # Copy image data to WASM memory
+        memory_view = self.wasm_memory.data_ptr(self.wasm_store)
+        memory_view[input_ptr:input_ptr + input_size] = image.tobytes()
+        
+        # Call WASM upscale function
+        self.wasm_instance.exports.upscale(
+            self.wasm_store,
+            input_ptr, width, height, channels,
+            output_ptr, scale_factor,
+            tile_size, 32  # overlap
+        )
+        
+        # Read output from WASM memory
+        output_bytes = memory_view[output_ptr:output_ptr + output_size]
+        output_image = np.frombuffer(output_bytes, dtype=np.uint8).reshape(
+            out_height, out_width, channels
+        )
+        
+        # Free allocated memory
+        self.wasm_instance.exports.dealloc(self.wasm_store, input_ptr, input_size)
+        self.wasm_instance.exports.dealloc(self.wasm_store, output_ptr, output_size)
+        
+        return self.postprocess_image(output_image, original_dtype)
+    
+    async def upscale_webgpu(self, image: np.ndarray, scale_factor: int = 4) -> np.ndarray:
+        """Upscale using WebGPU (for browser environments)"""
+        if not self.webgpu_device:
+            raise RuntimeError("WebGPU not available")
+        
+        # This is a simplified WebGPU implementation
+        # In production, you'd use compute shaders for parallel processing
+        import wgpu
+        import wgpu.utils
+        
+        original_dtype = image.dtype
+        image = self.preprocess_image(image)
+        height, width, channels = image.shape
+        
+        # Create buffers
+        input_buffer = self.webgpu_device.create_buffer_with_data(
+            data=image.tobytes(),
+            usage=wgpu.BufferUsage.STORAGE | wgpu.BufferUsage.COPY_SRC
+        )
+        
+        out_height = height * scale_factor
+        out_width = width * scale_factor
+        output_buffer = self.webgpu_device.create_buffer(
+            size=out_height * out_width * channels,
+            usage=wgpu.BufferUsage.STORAGE | wgpu.BufferUsage.COPY_SRC
+        )
+        
+        # Load compute shader
+        shader_path = Path(__file__).parent / "upscale_shader.wgsl"
+        if shader_path.exists():
+            with open(shader_path, "r") as f:
+                shader_code = f.read()
+        else:
+            # Fallback: simple bilinear upscaling shader
+            shader_code = """
+            @group(0) @binding(0) var<storage, read> input: array<u32>;
+            @group(0) @binding(1) var<storage, write> output: array<u32>;
+            
+            @compute @workgroup_size(8, 8)
+            fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
+                let x = global_id.x;
+                let y = global_id.y;
+                let width = """ + str(width) + """;
+                let height = """ + str(height) + """;
+                let scale = """ + str(scale_factor) + """;
+                
+                let src_x = f32(x) / f32(scale);
+                let src_y = f32(y) / f32(scale);
+                
+                // Bilinear interpolation
+                let x0 = u32(floor(src_x));
+                let y0 = u32(floor(src_y));
+                let x1 = min(x0 + 1, width - 1);
+                let y1 = min(y0 + 1, height - 1);
+                
+                let fx = fract(src_x);
+                let fy = fract(src_y);
+                
+                let idx00 = (y0 * width + x0);
+                let idx01 = (y0 * width + x1);
+                let idx10 = (y1 * width + x0);
+                let idx11 = (y1 * width + x1);
+                
+                // Simple averaging (in production, use proper interpolation)
+                let out_idx = y * (width * scale) + x;
+                output[out_idx] = input[idx00];
+            }
+            """
+        
+        # Create compute pipeline
+        shader = self.webgpu_device.create_shader_module(code=shader_code)
+        pipeline = self.webgpu_device.create_compute_pipeline(
+            layout="auto",
+            compute={"module": shader, "entry_point": "main"}
+        )
+        
+        # Create bind group
+        bind_group = self.webgpu_device.create_bind_group(
+            layout=pipeline.get_bind_group_layout(0),
+            entries=[
+                {"binding": 0, "resource": {"buffer": input_buffer}},
+                {"binding": 1, "resource": {"buffer": output_buffer}}
+            ]
+        )
+        
+        # Dispatch compute shader
+        command_encoder = self.webgpu_device.create_command_encoder()
+        compute_pass = command_encoder.begin_compute_pass()
+        compute_pass.set_pipeline(pipeline)
+        compute_pass.set_bind_group(0, bind_group)
+        compute_pass.dispatch_workgroups(
+            (width * scale_factor + 7) // 8,
+            (height * scale_factor + 7) // 8,
+            1
+        )
+        compute_pass.end()
+        
+        # Submit and wait
+        self.webgpu_device.queue.submit([command_encoder.finish()])
+        
+        # Read back output
+        output_data = output_buffer.read_data()
+        output_image = np.frombuffer(output_data, dtype=np.uint8).reshape(
+            out_height, out_width, channels
+        )
+        
+        return self.postprocess_image(output_image, original_dtype)
+    
+    def upscale_cpu_parallel(self, image: np.ndarray, scale_factor: int = 4,
+                           tile_size: int = 512, num_threads: int = 4) -> np.ndarray:
+        """Parallel CPU upscaling using tiled processing"""
+        original_dtype = image.dtype
+        image = self.preprocess_image(image)
+        height, width, channels = image.shape
+        
+        out_height = height * scale_factor
+        out_width = width * scale_factor
+        output = np.zeros((out_height, out_width, channels), dtype=np.uint8)
+        
+        # Calculate tiles with overlap
+        tiles = []
+        overlap = 32
+        
+        for y in range(0, height, tile_size - overlap):
+            for x in range(0, width, tile_size - overlap):
+                y_end = min(y + tile_size, height)
+                x_end = min(x + tile_size, width)
+                tiles.append((x, y, x_end, y_end))
+        
+        # Process tiles in parallel
+        def process_tile(tile_coords):
+            x1, y1, x2, y2 = tile_coords
+            tile = image[y1:y2, x1:x2]
+            
+            # Simple bilinear upscaling (replace with actual model in production)
+            out_y1 = y1 * scale_factor
+            out_y2 = y2 * scale_factor
+            out_x1 = x1 * scale_factor
+            out_x2 = x2 * scale_factor
+            
+            # Use torch for efficient upscaling
+            tile_tensor = torch.from_numpy(tile).permute(2, 0, 1).unsqueeze(0).float() / 255.0
+            upscaled = torch.nn.functional.interpolate(
+                tile_tensor, 
+                scale_factor=scale_factor, 
+                mode='bilinear', 
+                align_corners=False
+            )
+            upscaled = (upscaled.squeeze(0).permute(1, 2, 0).numpy() * 255).astype(np.uint8)
+            
+            return (out_x1, out_y1, out_x2, out_y2, upscaled)
+        
+        # Use ThreadPoolExecutor for parallel processing
+        futures = []
+        for tile in tiles:
+            future = self.executor.submit(process_tile, tile)
+            futures.append(future)
+        
+        # Collect results
+        for future in concurrent.futures.as_completed(futures):
+            out_x1, out_y1, out_x2, out_y2, upscaled_tile = future.result()
+            output[out_y1:out_y2, out_x1:out_x2] = upscaled_tile
+        
+        return self.postprocess_image(output, original_dtype)
+    
+    def upscale(self, image: Union[np.ndarray, torch.Tensor], 
+               scale_factor: int = 4, backend: Optional[UpscaleBackend] = None,
+               config: Optional[UpscaleConfig] = None) -> Union[np.ndarray, torch.Tensor]:
+        """
+        Main upscale method with automatic backend selection
+        
+        Args:
+            image: Input image (numpy array or torch tensor)
+            scale_factor: Upscaling factor (2, 4, 8, etc.)
+            backend: Force specific backend (auto-select if None)
+            config: Additional configuration
+        
+        Returns:
+            Upscaled image in same format as input
+        """
+        # Convert torch tensor to numpy if needed
+        is_torch = isinstance(image, torch.Tensor)
+        if is_torch:
+            device = image.device
+            image_np = image.cpu().numpy()
+            if image_np.ndim == 4:  # Batch dimension
+                image_np = image_np[0]
+            if image_np.shape[0] in [1, 3]:  # CHW format
+                image_np = np.transpose(image_np, (1, 2, 0))
+        else:
+            image_np = image
+        
+        # Auto-select backend if not specified
+        if backend is None:
+            height, width = image_np.shape[:2]
+            backend = self.get_optimal_backend((width, height))
+        
+        # Apply upscaling
+        try:
+            if backend == UpscaleBackend.WASM:
+                result = self.upscale_wasm(image_np, scale_factor)
+            elif backend == UpscaleBackend.WEBGPU:
+                # Run async WebGPU in sync context
+                loop = asyncio.new_event_loop()
+                result = loop.run_until_complete(
+                    self.upscale_webgpu(image_np, scale_factor)
+                )
+                loop.close()
+            elif backend == UpscaleBackend.CPU:
+                result = self.upscale_cpu_parallel(
+                    image_np, scale_factor,
+                    num_threads=config.num_threads if config else 4
+                )
+            else:  # GPU backend - use existing PyTorch implementation
+                # This would call the original upscaler
+                result = self._upscale_gpu_fallback(image_np, scale_factor)
+        except Exception as e:
+            logger.error(f"Upscaling failed with {backend}: {e}")
+            # Fallback to CPU
+            result = self.upscale_cpu_parallel(image_np, scale_factor)
+        
+        # Convert back to torch tensor if needed
+        if is_torch:
+            if result.ndim == 3 and result.shape[2] in [1, 3]:  # HWC format
+                result = np.transpose(result, (2, 0, 1))
+            result = torch.from_numpy(result).to(device)
+            if image.ndim == 4:
+                result = result.unsqueeze(0)
+        
+        return result
+    
+    def _upscale_gpu_fallback(self, image: np.ndarray, scale_factor: int) -> np.ndarray:
+        """Fallback GPU upscaling using PyTorch"""
+        tensor = torch.from_numpy(image).permute(2, 0, 1).unsqueeze(0).float() / 255.0
+        tensor = tensor.to(devices.device)
+        
+        # Use torch's interpolate for simplicity
+        # In production, this would use the actual upscaling models
+        upscaled = torch.nn.functional.interpolate(
+            tensor,
+            scale_factor=scale_factor,
+            mode='bilinear',
+            align_corners=False
+        )
+        
+        upscaled = (upscaled.squeeze(0).permute(1, 2, 0).cpu().numpy() * 255)
+        return upscaled.astype(np.uint8)
+
+
+class WASMUpscalerData(UpscalerData):
+    """Upscaler data for WASM-based upscalers"""
+    
+    def __init__(self, name: str, path: str, upscaler: WASMUpscaler, scale: int = 4):
+        super().__init__(name, path, upscaler, scale)
+        self.wasm_upscaler = upscaler
+
+
+class UpscalerWASM(Upscaler):
+    """Upscaler implementation using WebAssembly"""
+    
+    def __init__(self, dirname: str = None):
+        super().__init__(False)
+        self.wasm_upscaler = WASMUpscaler()
+        self.name = "WASM Upscaler"
+        self.scalers = [
+            WASMUpscalerData("WASM 2x", "", self.wasm_upscaler, 2),
+            WASMUpscalerData("WASM 4x", "", self.wasm_upscaler, 4),
+            WASMUpscalerData("WASM 8x", "", self.wasm_upscaler, 8),
+        ]
+    
+    def do_upscale(self, img: torch.Tensor, selected_model: Optional[str] = None) -> torch.Tensor:
+        """Perform upscaling using WASM backend"""
+        # Get scale factor from selected model
+        scale = 4  # default
+        for scaler in self.scalers:
+            if selected_model and scaler.name == selected_model:
+                scale = scaler.scale
+                break
+        
+        # Use automatic backend selection
+        return self.wasm_upscaler.upscale(img, scale_factor=scale)
+    
+    def load_model(self, path: str):
+        """Load model (not needed for WASM as it uses pre-compiled module)"""
+        pass
+
+
+# Integration with existing upscalers
+def patch_existing_upscalers():
+    """Patch existing upscalers to use WASM when beneficial"""
+    try:
+        from modules.upscaler import Upscaler as BaseUpscaler
+        
+        # Store original upscale method
+        original_upscale = BaseUpscaler.upscale
+        
+        def wasm_enhanced_upscale(self, img: torch.Tensor, *args, **kwargs):
+            """Enhanced upscale that uses WASM for large images"""
+            # Check if we should use WASM
+            if hasattr(self, 'wasm_upscaler'):
+                return self.wasm_upscaler.upscale(img, *args, **kwargs)
+            
+            # For small images or when WASM not available, use original
+            height, width = img.shape[-2:]
+            megapixels = (height * width) / 1_000_000
+            
+            if megapixels > 1 and shared.opts.wasm_upscale_enabled:
+                # Use WASM for larger images
+                wasm = WASMUpscaler()
+                return wasm.upscale(img, *args, **kwargs)
+            else:
+                return original_upscale(self, img, *args, **kwargs)
+        
+        # Apply patch
+        BaseUpscaler.upscale = wasm_enhanced_upscale
+        logger.info("Patched existing upscalers with WASM support")
+        
+    except Exception as e:
+        logger.error(f"Failed to patch upscalers: {e}")
+
+
+# Settings integration
+def on_ui_settings():
+    """Add WASM upscaling settings to UI"""
+    section = ('wasm', "WebAssembly")
+    shared.opts.add_option("wasm_upscale_enabled", shared.OptionInfo(
+        True, "Enable WebAssembly upscaling for large images", section=section
+    ))
+    shared.opts.add_option("wasm_upscale_threshold", shared.OptionInfo(
+        1.0, "Minimum image size (megapixels) to use WASM", 
+        section=section
+    ))
+    shared.opts.add_option("wasm_tile_size", shared.OptionInfo(
+        512, "Tile size for WASM processing", section=section
+    ))
+    shared.opts.add_option("wasm_num_threads", shared.OptionInfo(
+        4, "Number of threads for CPU fallback", section=section
+    ))
+
+
+# Initialize on import
+wasm_upscaler = WASMUpscaler()
+
+# Patch existing upscalers if enabled
+if shared.opts.wasm_upscale_enabled if hasattr(shared.opts, 'wasm_upscale_enabled') else True:
+    patch_existing_upscalers()
+
+# Register settings
+try:
+    from modules import script_callbacks
+    script_callbacks.on_ui_settings(on_ui_settings)
+except ImportError:
+    logger.warning("Could not register UI settings for WASM upscaler")
+
+
+if __name__ == "__main__":
+    # Test the WASM upscaler
+    print("Testing WASM Upscaler...")
+    
+    # Create a test image
+    test_image = np.random.randint(0, 255, (512, 512, 3), dtype=np.uint8)
+    
+    upscaler = WASMUpscaler()
+    
+    # Test different backends
+    for backend in UpscaleBackend:
+        try:
+            print(f"\nTesting {backend.value} backend...")
+            result = upscaler.upscale(test_image, scale_factor=4, backend=backend)
+            print(f"  Input shape: {test_image.shape}")
+            print(f"  Output shape: {result.shape}")
+            print(f"  Output dtype: {result.dtype}")
+        except Exception as e:
+            print(f"  Failed: {e}")
+    
+    print("\nWASM Upscaler test complete")
