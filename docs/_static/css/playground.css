@@ -1,0 +1,1105 @@
+/* LlamaFactory Interactive Documentation & Live Playground Styles */
+
+:root {
+  --playground-primary: #6366f1;
+  --playground-primary-dark: #4f46e5;
+  --playground-secondary: #10b981;
+  --playground-accent: #f59e0b;
+  --playground-bg: #0f172a;
+  --playground-bg-light: #1e293b;
+  --playground-text: #f8fafc;
+  --playground-text-muted: #94a3b8;
+  --playground-border: #334155;
+  --playground-success: #22c55e;
+  --playground-error: #ef4444;
+  --playground-warning: #f59e0b;
+  --playground-radius: 12px;
+  --playground-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  --playground-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.llama-playground-container {
+  background: var(--playground-bg);
+  border-radius: var(--playground-radius);
+  border: 1px solid var(--playground-border);
+  box-shadow: var(--playground-shadow);
+  margin: 2rem 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.llama-playground-header {
+  background: var(--playground-bg-light);
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--playground-border);
+}
+
+.llama-playground-title {
+  color: var(--playground-text);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.llama-playground-title::before {
+  content: "⚡";
+  font-size: 1.5rem;
+}
+
+.llama-playground-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--playground-text-muted);
+}
+
+.llama-playground-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--playground-success);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.llama-playground-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 500px;
+}
+
+@media (max-width: 1024px) {
+  .llama-playground-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+.llama-playground-editor {
+  border-right: 1px solid var(--playground-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.llama-playground-editor-header {
+  background: var(--playground-bg-light);
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--playground-border);
+}
+
+.llama-playground-editor-tabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.llama-playground-editor-tab {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: none;
+  color: var(--playground-text-muted);
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  transition: var(--playground-transition);
+}
+
+.llama-playground-editor-tab:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--playground-text);
+}
+
+.llama-playground-editor-tab.active {
+  background: var(--playground-primary);
+  color: white;
+}
+
+.llama-playground-editor-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.llama-playground-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: var(--playground-transition);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.llama-playground-btn-primary {
+  background: var(--playground-primary);
+  color: white;
+}
+
+.llama-playground-btn-primary:hover {
+  background: var(--playground-primary-dark);
+  transform: translateY(-1px);
+}
+
+.llama-playground-btn-secondary {
+  background: transparent;
+  border: 1px solid var(--playground-border);
+  color: var(--playground-text-muted);
+}
+
+.llama-playground-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--playground-text);
+}
+
+.llama-playground-btn-success {
+  background: var(--playground-success);
+  color: white;
+}
+
+.llama-playground-btn-success:hover {
+  background: #16a34a;
+}
+
+.llama-playground-btn-icon {
+  padding: 0.5rem;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.llama-playground-code-editor {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.llama-playground-code-editor pre {
+  margin: 0;
+  padding: 1rem;
+  height: 100%;
+  overflow: auto;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--playground-text);
+  background: var(--playground-bg);
+}
+
+.llama-playground-code-editor .CodeMirror {
+  height: 100%;
+  background: var(--playground-bg);
+  color: var(--playground-text);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.llama-playground-output {
+  display: flex;
+  flex-direction: column;
+  background: var(--playground-bg);
+}
+
+.llama-playground-output-header {
+  background: var(--playground-bg-light);
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--playground-border);
+}
+
+.llama-playground-output-title {
+  color: var(--playground-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.llama-playground-output-content {
+  flex: 1;
+  padding: 1rem;
+  overflow: auto;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.llama-playground-output-item {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--playground-border);
+}
+
+.llama-playground-output-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.llama-playground-output-label {
+  color: var(--playground-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.llama-playground-output-text {
+  color: var(--playground-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.llama-playground-output-error {
+  color: var(--playground-error);
+  background: rgba(239, 68, 68, 0.1);
+  padding: 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid var(--playground-error);
+}
+
+.llama-playground-output-success {
+  color: var(--playground-success);
+  background: rgba(34, 197, 94, 0.1);
+  padding: 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid var(--playground-success);
+}
+
+.llama-playground-output-warning {
+  color: var(--playground-warning);
+  background: rgba(245, 158, 11, 0.1);
+  padding: 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid var(--playground-warning);
+}
+
+.llama-playground-controls {
+  background: var(--playground-bg-light);
+  padding: 1rem;
+  border-top: 1px solid var(--playground-border);
+}
+
+.llama-playground-controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.llama-playground-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.llama-playground-control-label {
+  color: var(--playground-text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.llama-playground-control-input {
+  background: var(--playground-bg);
+  border: 1px solid var(--playground-border);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  color: var(--playground-text);
+  font-size: 0.875rem;
+  transition: var(--playground-transition);
+}
+
+.llama-playground-control-input:focus {
+  outline: none;
+  border-color: var(--playground-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.llama-playground-control-select {
+  background: var(--playground-bg);
+  border: 1px solid var(--playground-border);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  color: var(--playground-text);
+  font-size: 0.875rem;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2rem;
+}
+
+.llama-playground-control-range {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--playground-border);
+  appearance: none;
+  cursor: pointer;
+}
+
+.llama-playground-control-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--playground-primary);
+  cursor: pointer;
+  transition: var(--playground-transition);
+}
+
+.llama-playground-control-range::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+.llama-playground-control-value {
+  color: var(--playground-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: right;
+  margin-top: 0.25rem;
+}
+
+.llama-playground-footer {
+  background: var(--playground-bg-light);
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--playground-border);
+}
+
+.llama-playground-footer-info {
+  color: var(--playground-text-muted);
+  font-size: 0.75rem;
+}
+
+.llama-playground-footer-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.llama-playground-model-comparison {
+  background: var(--playground-bg);
+  border-radius: var(--playground-radius);
+  border: 1px solid var(--playground-border);
+  margin: 2rem 0;
+  overflow: hidden;
+}
+
+.llama-playground-model-comparison-header {
+  background: var(--playground-bg-light);
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--playground-border);
+}
+
+.llama-playground-model-comparison-title {
+  color: var(--playground-text);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.llama-playground-model-comparison-title::before {
+  content: "⚖️";
+  font-size: 1.5rem;
+}
+
+.llama-playground-model-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.llama-playground-model-card {
+  background: var(--playground-bg-light);
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid var(--playground-border);
+  transition: var(--playground-transition);
+}
+
+.llama-playground-model-card:hover {
+  border-color: var(--playground-primary);
+  transform: translateY(-2px);
+}
+
+.llama-playground-model-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.llama-playground-model-name {
+  color: var(--playground-text);
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.llama-playground-model-badge {
+  padding: 0.25rem 0.5rem;
+  background: var(--playground-primary);
+  color: white;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.llama-playground-model-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.llama-playground-model-stat {
+  text-align: center;
+}
+
+.llama-playground-model-stat-value {
+  color: var(--playground-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.llama-playground-model-stat-label {
+  color: var(--playground-text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.llama-playground-model-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.llama-playground-try-it {
+  background: linear-gradient(135deg, var(--playground-bg) 0%, var(--playground-bg-light) 100%);
+  border-radius: var(--playground-radius);
+  border: 1px solid var(--playground-border);
+  padding: 2rem;
+  margin: 2rem 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.llama-playground-try-it::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--playground-primary), var(--playground-secondary), var(--playground-accent));
+}
+
+.llama-playground-try-it-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.llama-playground-try-it-title {
+  color: var(--playground-text);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.llama-playground-try-it-title::before {
+  content: "🚀";
+  font-size: 2rem;
+}
+
+.llama-playground-try-it-description {
+  color: var(--playground-text-muted);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.llama-playground-try-it-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.llama-playground-try-it-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  border: 1px solid var(--playground-border);
+}
+
+.llama-playground-try-it-feature-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.llama-playground-try-it-feature-content {
+  flex: 1;
+}
+
+.llama-playground-try-it-feature-title {
+  color: var(--playground-text);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.llama-playground-try-it-feature-desc {
+  color: var(--playground-text-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.llama-playground-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+}
+
+.llama-playground-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--playground-border);
+  border-top-color: var(--playground-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.llama-playground-loading-text {
+  color: var(--playground-text-muted);
+  font-size: 0.875rem;
+}
+
+.llama-playground-progress {
+  width: 100%;
+  height: 4px;
+  background: var(--playground-border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 1rem;
+}
+
+.llama-playground-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--playground-primary), var(--playground-secondary));
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.llama-playground-tutorial {
+  background: var(--playground-bg-light);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  border: 1px solid var(--playground-border);
+}
+
+.llama-playground-tutorial-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.llama-playground-tutorial-title {
+  color: var(--playground-text);
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.llama-playground-tutorial-steps {
+  counter-reset: step;
+}
+
+.llama-playground-tutorial-step {
+  counter-increment: step;
+  position: relative;
+  padding-left: 2.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--playground-border);
+}
+
+.llama-playground-tutorial-step:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.llama-playground-tutorial-step::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 2rem;
+  height: 2rem;
+  background: var(--playground-primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.llama-playground-tutorial-step-title {
+  color: var(--playground-text);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.llama-playground-tutorial-step-desc {
+  color: var(--playground-text-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.llama-playground-tutorial-step-code {
+  background: var(--playground-bg);
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin-top: 0.75rem;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.875rem;
+  color: var(--playground-text);
+  overflow-x: auto;
+}
+
+.llama-playground-hyperparameter-tuning {
+  background: var(--playground-bg);
+  border-radius: var(--playground-radius);
+  border: 1px solid var(--playground-border);
+  padding: 1.5rem;
+  margin: 2rem 0;
+}
+
+.llama-playground-hyperparameter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.llama-playground-hyperparameter-title {
+  color: var(--playground-text);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.llama-playground-hyperparameter-title::before {
+  content: "🎛️";
+  font-size: 1.5rem;
+}
+
+.llama-playground-hyperparameter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.llama-playground-hyperparameter-item {
+  background: var(--playground-bg-light);
+  border-radius: 8px;
+  padding: 1.25rem;
+  border: 1px solid var(--playground-border);
+}
+
+.llama-playground-hyperparameter-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.llama-playground-hyperparameter-name {
+  color: var(--playground-text);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.llama-playground-hyperparameter-value {
+  color: var(--playground-primary);
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.llama-playground-hyperparameter-desc {
+  color: var(--playground-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.llama-playground-hyperparameter-slider {
+  width: 100%;
+}
+
+.llama-playground-hyperparameter-presets {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.llama-playground-hyperparameter-preset {
+  padding: 0.25rem 0.75rem;
+  background: transparent;
+  border: 1px solid var(--playground-border);
+  border-radius: 4px;
+  color: var(--playground-text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: var(--playground-transition);
+}
+
+.llama-playground-hyperparameter-preset:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--playground-text);
+}
+
+.llama-playground-hyperparameter-preset.active {
+  background: var(--playground-primary);
+  border-color: var(--playground-primary);
+  color: white;
+}
+
+.llama-playground-results {
+  background: var(--playground-bg);
+  border-radius: var(--playground-radius);
+  border: 1px solid var(--playground-border);
+  padding: 1.5rem;
+  margin: 2rem 0;
+}
+
+.llama-playground-results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.llama-playground-results-title {
+  color: var(--playground-text);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.llama-playground-results-title::before {
+  content: "📊";
+  font-size: 1.5rem;
+}
+
+.llama-playground-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.llama-playground-result-card {
+  background: var(--playground-bg-light);
+  border-radius: 8px;
+  padding: 1.25rem;
+  text-align: center;
+  border: 1px solid var(--playground-border);
+}
+
+.llama-playground-result-value {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.llama-playground-result-value.primary {
+  color: var(--playground-primary);
+}
+
+.llama-playground-result-value.secondary {
+  color: var(--playground-secondary);
+}
+
+.llama-playground-result-value.accent {
+  color: var(--playground-accent);
+}
+
+.llama-playground-result-label {
+  color: var(--playground-text-muted);
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.llama-playground-result-change {
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.llama-playground-result-change.positive {
+  color: var(--playground-success);
+}
+
+.llama-playground-result-change.negative {
+  color: var(--playground-error);
+}
+
+.llama-playground-visualization {
+  background: var(--playground-bg);
+  border-radius: var(--playground-radius);
+  border: 1px solid var(--playground-border);
+  padding: 1.5rem;
+  margin: 2rem 0;
+}
+
+.llama-playground-visualization-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.llama-playground-visualization-title {
+  color: var(--playground-text);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.llama-playground-visualization-title::before {
+  content: "📈";
+  font-size: 1.5rem;
+}
+
+.llama-playground-visualization-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.llama-playground-visualization-chart {
+  background: var(--playground-bg-light);
+  border-radius: 8px;
+  padding: 1rem;
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--playground-border);
+}
+
+.llama-playground-visualization-placeholder {
+  color: var(--playground-text-muted);
+  text-align: center;
+}
+
+.llama-playground-visualization-placeholder-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.llama-playground-visualization-placeholder-text {
+  font-size: 0.875rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .llama-playground-body {
+    grid-template-columns: 1fr;
+  }
+  
+  .llama-playground-editor {
+    border-right: none;
+    border-bottom: 1px solid var(--playground-border);
+  }
+  
+  .llama-playground-controls-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .llama-playground-model-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .llama-playground-try-it-features {
+    grid-template-columns: 1fr;
+  }
+  
+  .llama-playground-hyperparameter-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .llama-playground-results-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .llama-playground-results-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .llama-playground-footer {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .llama-playground-footer-actions {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Animation classes */
+.llama-playground-fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.llama-playground-slide-up {
+  animation: slideUp 0.5s ease forwards;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Code syntax highlighting */
+.llama-playground-keyword { color: #c678dd; }
+.llama-playground-string { color: #98c379; }
+.llama-playground-number { color: #d19a66; }
+.llama-playground-comment { color: #5c6370; font-style: italic; }
+.llama-playground-function { color: #61afef; }
+.llama-playground-class { color: #e5c07b; }
+.llama-playground-operator { color: #56b6c2; }
+.llama-playground-punctuation { color: #abb2bf; }
+
+/* Tooltip styles */
+.llama-playground-tooltip {
+  position: relative;
+}
+
+.llama-playground-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--playground-bg-light);
+  color: var(--playground-text);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: var(--playground-transition);
+  z-index: 1000;
+  border: 1px solid var(--playground-border);
+}
+
+.llama-playground-tooltip:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --playground-bg: #0f172a;
+    --playground-bg-light: #1e293b;
+    --playground-text: #f8fafc;
+    --playground-text-muted: #94a3b8;
+    --playground-border: #334155;
+  }
+}
+
+/* Print styles */
+@media print {
+  .llama-playground-container,
+  .llama-playground-model-comparison,
+  .llama-playground-try-it,
+  .llama-playground-hyperparameter-tuning,
+  .llama-playground-results,
+  .llama-playground-visualization {
+    break-inside: avoid;
+    border: 1px solid #ddd;
+    box-shadow: none;
+  }
+  
+  .llama-playground-btn,
+  .llama-playground-controls,
+  .llama-playground-footer-actions {
+    display: none !important;
+  }
+}
