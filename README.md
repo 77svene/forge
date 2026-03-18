@@ -1,240 +1,243 @@
-# 🔥 Forge — The Future of Stable Diffusion is Here
+# 🔥 **forge** — Your local foundry for open models.
+### *Stop stitching together a dozen tools. Train, serve, and deploy any open model from a single, lightning-fast local UI.*
 
-**Finally, Stable Diffusion with a modern React/TypeScript frontend, real-time collaboration, and one-click container deployment.**
-
-*Where creation meets collaboration.*
-
-![GitHub Stars](https://img.shields.io/github/stars/your-org/forge?style=social)
-![License](https://img.shields.io/badge/license-MIT-green)
-![Docker Pulls](https://img.shields.io/docker/pulls/your-org/forge)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
-![React](https://img.shields.io/badge/React-18-blue)
+[![GitHub Stars](https://img.shields.io/github/stars/forge/forge?style=social)](https://github.com/forge/forge)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Discord](https://img.shields.io/discord/1234567890?label=Discord&logo=discord&logoColor=white)](https://discord.gg/forge)
+[![Twitter](https://img.shields.io/twitter/follow/forge?style=social)](https://twitter.com/forge)
 
 ---
 
-## 🚀 Why Forge?
+**forge** is a production-ready, upgraded fork of [unsloth](https://github.com/unsloth-ai/unsloth) (55k+ ⭐) that transforms your local machine into a complete model foundry. No more juggling training scripts, inference servers, and deployment pipelines. **One interface. One workflow. Zero friction.**
 
-**Forge is a complete reimagining of the Stable Diffusion web UI** with a responsive React interface, container-native architecture, and sandboxed plugin marketplace. Built for creators who demand professional tools without the friction.
+---
 
-If you love stable-diffusion-webui but hate its limitations, **Forge is your upgrade path.**
+## 🚀 **Why forge? The Upgrade That Changes Everything.**
 
-## ⚡ The Upgrade You've Been Waiting For
+unsloth gave us blazing-fast training. **forge** gives you the entire lifecycle.
 
-| Feature | Stable Diffusion WebUI | **Forge** |
-|---------|------------------------|-----------|
-| **Frontend** | Gradio (Python-based) | **Modern React/TypeScript** |
-| **Mobile Support** | Limited | **Fully Responsive** |
-| **Real-time Collaboration** | ❌ | **✅ Live cursors, shared sessions** |
-| **Deployment** | Manual setup | **One-click Docker/K8s** |
-| **Plugin System** | Basic extensions | **Sandboxed Marketplace** |
-| **Performance** | Python bottlenecks | **Optimized async architecture** |
-| **UI/UX** | Functional | **Professional creative suite** |
-| **Updates** | Manual git pulls | **Automatic container updates** |
+| Feature | unsloth (Original) | **forge** (This Fork) |
+|---------|-------------------|----------------------|
+| **Training** | ✅ Fast LoRA/QLoRA | ✅ Fast LoRA/QLoRA + **Full fine-tuning** |
+| **Inference** | ❌ Basic generation | ✅ **Production inference server** with OpenAI-compatible API |
+| **Model Formats** | Limited | ✅ **GGUF, GPTQ, AWQ, EXL2** quantized serving |
+| **Model Registry** | ❌ None | ✅ **Integrated version control** with HF Hub sync |
+| **Deployment** | ❌ Manual | ✅ **One-click cloud deployment** (AWS/GCP/Azure) with auto-scaling |
+| **UI/UX** | ❌ Notebook-only | ✅ **Full local web UI** for all operations |
+| **Monitoring** | ❌ Basic logs | ✅ **Real-time metrics dashboard** |
 
-## 🏁 Quickstart (60 Seconds)
+---
 
+## ⚡ **Quickstart: From Zero to Deployed in 5 Minutes**
+
+### 1. Install forge
 ```bash
-# Clone and launch with Docker
-git clone https://github.com/your-org/forge.git
-cd forge
-docker compose up -d
-
-# Access at http://localhost:3000
-# First launch downloads models automatically
+pip install forge-ai
+# Or with CUDA 12.1 support
+pip install forge-ai[cu121]
 ```
 
-**Or try the instant cloud deployment:**
+### 2. Launch the Local UI
+```bash
+forge serve --ui
+# Opens at http://localhost:7860
+```
 
-[![Deploy to Railway](https://railway.app/button.svg)](https://railway.app/template/forge)
-[![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run)
+### 3. Train Your First Model (Python API)
+```python
+from forge import Trainer, ModelRegistry
 
-## 🏗️ Architecture Overview
+# Load and train
+trainer = Trainer(
+    model="meta-llama/Llama-3-8B",
+    dataset="your_dataset.jsonl",
+    method="qlora",  # or "lora", "full"
+    epochs=3,
+)
+
+model_path = trainer.run()
+
+# Register and deploy
+registry = ModelRegistry()
+model_id = registry.register(model_path, name="my-llama-3-finetune")
+
+# One-click deploy to cloud
+deployer = registry.deploy(
+    model_id,
+    provider="aws",
+    instance="g5.xlarge",
+    scaling={"min": 1, "max": 5}
+)
+print(f"Deployed at: {deployer.endpoint}")
+```
+
+### 4. Use the Inference Server (OpenAI-Compatible)
+```python
+import openai
+
+client = openai.OpenAI(
+    base_url="http://localhost:8000/v1",  # forge local server
+    api_key="forge"
+)
+
+response = client.chat.completions.create(
+    model="my-llama-3-finetune",
+    messages=[{"role": "user", "content": "Explain quantum computing"}],
+    temperature=0.7
+)
+print(response.choices[0].message.content)
+```
+
+---
+
+## 🏗️ **Architecture Overview**
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                 React/TypeScript Frontend                │
-│  • Real-time collaboration • Mobile-responsive          │
-│  • Plugin sandbox • Modern UI components                │
-└─────────────────┬───────────────────────────────────────┘
-                  │ WebSocket + REST API
-┌─────────────────▼───────────────────────────────────────┐
-│               Forge Core (Rust/Python)                  │
-│  • Model management • Inference engine                  │
-│  • Plugin orchestrator • API gateway                    │
-└─────────────────┬───────────────────────────────────────┘
-                  │
-┌─────────────────▼───────────────────────────────────────┐
-│           Container-Native Infrastructure               │
-│  • Docker Compose profiles • Kubernetes Helm charts     │
-│  • Auto-scaling • Health monitoring                     │
+│                    forge Web UI                         │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐    │
+│  │ Training│  │ Serving │  │Registry │  │ Deploy  │    │
+│  │ Studio  │  │ Control │  │ Browser │  │ Manager │    │
+│  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘    │
+└───────┼────────────┼────────────┼────────────┼──────────┘
+        │            │            │            │
+┌───────▼────────────▼────────────▼────────────▼──────────┐
+│                  forge Core Engine                      │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │
+│  │  Trainer    │  │  Inference  │  │  Deployment │     │
+│  │  (unsloth++)│  │  Server     │  │  Orchestrator│    │
+│  └─────────────┘  └─────────────┘  └─────────────┘     │
+│  ┌─────────────────────────────────────────────┐       │
+│  │          Model Registry & Hub Sync          │       │
+│  └─────────────────────────────────────────────┘       │
+└─────────────────────────────────────────────────────────┘
+        │            │            │            │
+┌───────▼────────────▼────────────▼────────────▼──────────┐
+│              Local/Cloud Infrastructure                 │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐    │
+│  │  GPU    │  │ Storage │  │  Cloud  │  │Monitoring│    │
+│  │  Pool   │  │ (Hub)   │  │  API    │  │  Stack   │    │
+│  └─────────┘  └─────────┘  └─────────┘  └─────────┘    │
 └─────────────────────────────────────────────────────────┘
 ```
 
-## 🛠️ Installation Options
-
-### Option 1: Docker (Recommended)
-```bash
-# Basic local deployment
-docker compose -f docker-compose.local.yml up
-
-# Cloud-optimized with GPU support
-docker compose -f docker-compose.cloud.yml up
-
-# Kubernetes cluster deployment
-helm install forge ./helm/forge
-```
-
-### Option 2: Manual Installation
-```bash
-# Prerequisites: Node.js 18+, Python 3.10+, Docker
-git clone https://github.com/your-org/forge.git
-cd forge
-
-# Frontend
-cd frontend
-npm install && npm run build
-
-# Backend
-cd ../backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# Launch
-python main.py --port 7860
-```
-
-### Option 3: One-Click Cloud
-Use our pre-configured templates for:
-- AWS ECS with GPU instances
-- Google Cloud Run with TPUs
-- Azure Container Instances
-- DigitalOcean Kubernetes
-
-## 🎨 Key Features
-
-### 🖥️ Modern Frontend
-- **React/TypeScript** with Vite for instant HMR
-- **Responsive design** works on desktop, tablet, and mobile
-- **Dark/light themes** with customizable UI
-- **Real-time previews** without page reloads
-
-### 👥 Real-time Collaboration
-- **Shared workspaces** with live cursors
-- **Version history** and branching
-- **Comment threads** on specific generations
-- **Team asset libraries**
-
-### 🐳 Container-Native
-```yaml
-# docker-compose.profiles.yml
-profiles:
-  local:
-    - frontend
-    - backend
-    - redis
-  cloud:
-    - frontend
-    - backend
-    - redis
-    - nginx
-    - monitoring
-  gpu:
-    - all
-    - nvidia-runtime
-    - model-cache
-```
-
-### 🔌 Plugin Marketplace
-```javascript
-// Example sandboxed plugin
-export default {
-  name: "Style Transfer",
-  version: "1.0.0",
-  sandbox: true, // Runs in isolated iframe
-  dependencies: ["tensorflow.js"],
-  
-  async process(image, settings) {
-    // Sandboxed execution - can't access filesystem
-    // or network without explicit permissions
-    return await applyStyleTransfer(image, settings);
-  }
-}
-```
-
-## 📊 Performance Comparison
-
-| Metric | Stable Diffusion WebUI | **Forge** |
-|--------|------------------------|-----------|
-| **Cold Start** | 45-60s | **8-12s** |
-| **UI Responsiveness** | 200-500ms | **<100ms** |
-| **Memory Usage** | 4-8GB | **2-4GB** |
-| **Concurrent Users** | 1-2 | **10-50** |
-| **Mobile Performance** | Poor | **Excellent** |
-
-## 🔒 Security & Stability
-
-- **Sandboxed plugins** with CSP headers
-- **Automated vulnerability scanning**
-- **Immutable container images**
-- **Regular security updates**
-- **Resource limits per session**
-
-## 🌟 Who Should Use Forge?
-
-- **Professional creators** who need reliable, fast tools
-- **Teams** collaborating on creative projects
-- **Developers** building on top of Stable Diffusion
-- **Enterprises** requiring scalable deployment
-- **Educators** teaching AI art generation
-
-## 📈 Roadmap
-
-- [ ] **Multi-model support** (SDXL, SD3, custom models)
-- [ ] **Advanced collaboration** (voice chat, drawing tools)
-- [ ] **Mobile apps** (iOS/Android)
-- [ ] **Enterprise SSO** integration
-- [ ] **Automated workflow builder**
-- [ ] **Asset marketplace** for prompts, models, LoRAs
-
-## 🤝 Contributing
-
-We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md).
-
-```bash
-# Development setup
-git clone https://github.com/your-org/forge.git
-cd forge
-docker compose -f docker-compose.dev.yml up
-# Frontend: http://localhost:5173
-# Backend: http://localhost:7860
-```
-
-## 📚 Documentation
-
-- [Architecture Deep Dive](docs/ARCHITECTURE.md)
-- [Plugin Development Guide](docs/PLUGINS.md)
-- [Deployment Strategies](docs/DEPLOYMENT.md)
-- [API Reference](docs/API.md)
-- [Migration from stable-diffusion-webui](docs/MIGRATION.md)
-
-## 💬 Community
-
-- [Discord Server](https://discord.gg/forge) - 5,000+ members
-- [GitHub Discussions](https://github.com/your-org/forge/discussions)
-- [Weekly Office Hours](https://forge.dev/office-hours)
-- [Showcase Gallery](https://forge.dev/gallery)
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) for details.
+**Key Components:**
+- **Training Engine**: unsloth's optimized core + full fine-tuning support
+- **Inference Server**: Production-ready with quantized model serving (GGUF/GPTQ/AWQ)
+- **Model Registry**: Version control, sharing, and automatic Hugging Face Hub sync
+- **Deployment Orchestrator**: One-click to AWS/GCP/Azure with auto-scaling
+- **Web UI**: Unified interface for all operations
 
 ---
 
-**Ready to upgrade your creative workflow?**
+## 📦 **Installation**
 
+### Prerequisites
+- Python 3.10+
+- CUDA 11.8+ (for GPU acceleration)
+- 16GB+ RAM recommended
+
+### Option 1: pip (Recommended)
 ```bash
-docker compose up -d
+# Basic installation
+pip install forge-ai
+
+# With CUDA 12.1 support
+pip install forge-ai[cu121]
+
+# With all optional dependencies
+pip install forge-ai[all]
 ```
 
-**Forge: Where creation meets collaboration.**
+### Option 2: Docker
+```bash
+docker run -p 7860:7860 -p 8000:8000 \
+  --gpus all \
+  forge/forge:latest
+```
+
+### Option 3: From Source
+```bash
+git clone https://github.com/forge/forge.git
+cd forge
+pip install -e .
+```
+
+### Verify Installation
+```bash
+forge --version
+forge doctor  # Checks system requirements
+```
+
+---
+
+## 🎯 **Migrating from unsloth**
+
+Switching is seamless. Your existing unsloth code works with minimal changes:
+
+```python
+# Old unsloth code
+from unsloth import FastLanguageModel
+model, tokenizer = FastLanguageModel.from_pretrained(...)
+
+# New forge code (same API, more power)
+from forge import Trainer
+trainer = Trainer(model="...", ...)  # Now includes serving & deployment
+```
+
+**Migration benefits:**
+- ✅ **Same training speed** (unsloth optimizations preserved)
+- ✅ **+ Production inference server**
+- ✅ **+ Integrated model registry**
+- ✅ **+ One-click deployment**
+- ✅ **+ Beautiful web UI**
+
+---
+
+## 🌟 **What's Coming Next**
+
+- [ ] **Multi-node training** across consumer GPUs
+- [ ] **Model merging** studio in UI
+- [ ] **Dataset marketplace** integration
+- [ ] **Mobile app** for monitoring deployments
+- [ ] **Plugin system** for custom transformations
+
+---
+
+## 🤝 **Contributing**
+
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+**Priority areas:**
+1. New model architecture support
+2. Cloud provider integrations
+3. UI/UX improvements
+4. Performance optimizations
+
+---
+
+## 📄 **License**
+
+Apache 2.0 — See [LICENSE](LICENSE) for details.
+
+---
+
+## 🙏 **Credits**
+
+Built on the incredible work of:
+- [unsloth](https://github.com/unsloth-ai/unsloth) team for the training optimizations
+- [llama.cpp](https://github.com/ggerganov/llama.cpp) for GGUF support
+- [vLLM](https://github.com/vllm-project/vllm) for inference inspiration
+- [Hugging Face](https://huggingface.co) for the model ecosystem
+
+---
+
+**Ready to build your model foundry?**
+
+```bash
+pip install forge-ai && forge serve --ui
+```
+
+**⭐ Star us on GitHub** if you believe in democratizing AI infrastructure.
+
+[![Star History Chart](https://api.star-history.com/svg?repos=forge/forge&type=Date)](https://star-history.com/#forge/forge&Date)
